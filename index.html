@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>트친소표 메이커</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+  :root {
+    --theme-50: #f3f7fd;
+    --theme-100: #eaf1fb;
+    --theme-200: #d4e3f7;
+    --theme-300: #a8c5ec;
+    --theme-400: #7aa8dd;
+    --theme-ink: #4a6a95;
+
+    --bg: #f2f4f9;
+    --paper: #ffffff;
+    --paper-soft: #f7f9fd;
+    --ink: #2b3149;
+    --ink-soft: #7a8299;
+    --ink-muted: #b8bfd0;
+    --line: #e6eaf2;
+    --danger: #e06070;
+    --shadow-sm: 0 2px 8px rgba(43, 49, 73, 0.05);
+    --shadow: 0 8px 28px rgba(43, 49, 73, 0.08);
+    --shadow-lg: 0 20px 60px rgba(43, 49, 73, 0.12);
+  }
+
+  [data-theme="coral"] { --theme-50:#fdf5f3; --theme-100:#fbe8e4; --theme-200:#f6cec7; --theme-300:#eda89d; --theme-400:#dd7f70; --theme-ink:#954a3e; }
+  [data-theme="blue"]  { --theme-50:#f3f7fd; --theme-100:#eaf1fb; --theme-200:#d4e3f7; --theme-300:#a8c5ec; --theme-400:#7aa8dd; --theme-ink:#4a6a95; }
+  [data-theme="sage"]  { --theme-50:#f4f8f3; --theme-100:#e7f0e4; --theme-200:#cfe0ca; --theme-300:#aacba3; --theme-400:#7fad76; --theme-ink:#4a6a43; }
+  [data-theme="mint"]  { --theme-50:#f2faf9; --theme-100:#e2f4f3; --theme-200:#c5e7e5; --theme-300:#95d1cd; --theme-400:#62b5b0; --theme-ink:#3d7a76; }
+  [data-theme="emerald"] { --theme-50:#f1faf4; --theme-100:#e0f3e6; --theme-200:#c1e5cd; --theme-300:#8fd0a4; --theme-400:#58b577; --theme-ink:#3a7d51; }
+  [data-theme="yellow"] { --theme-50:#fdf9ec; --theme-100:#fbf1d1; --theme-200:#f6e19e; --theme-300:#eecc5e; --theme-400:#d9b235; --theme-ink:#8a6d15; }
+  [data-theme="gray"]  { --theme-50:#f6f6f7; --theme-100:#ececee; --theme-200:#d6d6db; --theme-300:#b0b0b8; --theme-400:#878790; --theme-ink:#5a5a63; }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    font-family: 'Pretendard', sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    min-height: 100vh;
+  }
+  body {
+    background-image:
+      radial-gradient(circle at 15% 10%, var(--theme-200) 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, var(--theme-100) 0%, transparent 45%);
+    background-attachment: fixed;
+    transition: background 0.4s;
+  }
+
+  header {
+    text-align: center;
+    padding: 40px 20px 20px;
+  }
+  header h1 {
+    font-family: 'Inter', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--ink);
+  }
+  header .sub {
+    margin-top: 6px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+  }
+
+  .wrap {
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 20px 24px 80px;
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 28px;
+  }
+  @media (max-width: 1200px) {
+    .wrap { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    height: fit-content;
+    position: sticky;
+    top: 20px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+  }
+  .panel::-webkit-scrollbar { width: 6px; }
+  .panel::-webkit-scrollbar-thumb { background: var(--line); border-radius: 10px; }
+
+  .panel-section { margin-bottom: 22px; }
+  .panel-section:last-of-type { margin-bottom: 0; }
+
+  .panel h2 {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--theme-400);
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+    transition: color 0.3s;
+  }
+
+  .field { margin-bottom: 12px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label.lbl {
+    display: block;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+  .field input[type="text"],
+  .field textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    background: var(--paper-soft);
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--ink);
+    transition: all 0.15s;
+  }
+  .field input:focus, .field textarea:focus {
+    outline: none;
+    border-color: var(--theme-300);
+    background: #fff;
+    box-shadow: 0 0 0 3px var(--theme-100);
+  }
+  .field textarea { resize: vertical; min-height: 70px; font-family: 'Pretendard', sans-serif; line-height: 1.6; }
+
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .toggle-grid { display: flex; gap: 5px; flex-wrap: wrap; }
+  .toggle-pill {
+    padding: 6px 12px;
+    background: var(--paper-soft);
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .toggle-pill:hover { border-color: var(--theme-300); }
+  .toggle-pill.active {
+    background: var(--theme-200);
+    color: var(--theme-ink);
+    border-color: var(--theme-300);
+  }
+
+  /* 테마 */
+  .theme-picker { display: flex; gap: 8px; flex-wrap: wrap; }
+  .theme-swatch {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2.5px solid #fff;
+    box-shadow: 0 0 0 1.5px var(--line);
+    transition: all 0.15s;
+  }
+  .theme-swatch:hover { transform: scale(1.1); }
+  .theme-swatch.active {
+    box-shadow: 0 0 0 2.5px var(--ink);
+    transform: scale(1.1);
+  }
+  .theme-swatch[data-t="coral"]   { background: #eda89d; }
+  .theme-swatch[data-t="blue"]    { background: #a8c5ec; }
+  .theme-swatch[data-t="sage"]    { background: #aacba3; }
+  .theme-swatch[data-t="mint"]    { background: #95d1cd; }
+  .theme-swatch[data-t="emerald"] { background: #8fd0a4; }
+  .theme-swatch[data-t="yellow"]  { background: #eecc5e; }
+  .theme-swatch[data-t="gray"]    { background: #b0b0b8; }
+
+  /* 이미지 조정 섹션 (프로필 및 캐릭터 공통) */
+  .img-upload-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .img-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--theme-100);
+    color: var(--theme-ink);
+    border: 1.5px solid var(--theme-200);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .img-upload-btn:hover { background: var(--theme-200); }
+  .img-upload-btn input { display: none; }
+
+  .img-adjust {
+    margin-top: 10px;
+    padding: 12px;
+    background: var(--paper-soft);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+  }
+  .img-adjust[hidden] { display: none; }
+
+  .img-adjust-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 8px;
+  }
+
+  .adjust-preview {
+    width: 160px;
+    height: 160px;
+    margin: 0 auto 12px;
+    overflow: hidden;
+    background: var(--theme-100);
+    position: relative;
+    cursor: grab;
+    border: 2px solid #fff;
+    box-shadow: var(--shadow-sm);
+    user-select: none;
+    touch-action: none;
+  }
+  .adjust-preview.round {
+    border-radius: 50%;
+  }
+  .adjust-preview.rect {
+    width: 120px;
+    height: 160px;
+    border-radius: 8px;
+  }
+  .adjust-preview.round { border-radius: 50%; }
+  .adjust-preview.rect {
+    border-radius: 8px;
+    max-width: 120px;
+  }
+  .adjust-preview:active { cursor: grabbing; }
+
+  .adjust-preview-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    will-change: transform;
+    pointer-events: none;
+    max-width: none;
+    max-height: none;
+  }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  .slider-row input[type="range"] {
+    flex: 1;
+    accent-color: var(--theme-400);
+  }
+  .slider-row .slider-val {
+    min-width: 38px;
+    text-align: right;
+    font-family: 'Inter', monospace;
+    font-size: 10px;
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .adjust-hint {
+    text-align: center;
+    font-size: 10px;
+    color: var(--ink-muted);
+    margin-top: 2px;
+  }
+
+  /* 캐릭터 카드 (입력) */
+  .char-list { display: flex; flex-direction: column; gap: 12px; }
+  .char-item {
+    background: var(--paper-soft);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    padding: 12px;
+  }
+  .char-item-head {
+    display: grid;
+    grid-template-columns: 48px 1fr auto;
+    gap: 8px;
+    align-items: center;
+  }
+  .char-thumb {
+    width: 48px; height: 48px;
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+    border: 1.5px solid var(--line);
+    position: relative;
+    color: var(--ink-muted);
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .char-thumb img {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .char-fields { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .char-fields input {
+    padding: 6px 10px;
+    border: 1.5px solid var(--line);
+    border-radius: 6px;
+    background: #fff;
+    font-family: inherit;
+    font-size: 12px;
+    color: var(--ink);
+  }
+  .char-fields input:focus { outline: none; border-color: var(--theme-300); }
+
+  .char-del {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.15s;
+    padding: 0;
+  }
+  .char-del:hover { background: #fbe5e8; color: var(--danger); border-color: var(--danger); }
+
+  .char-item-body { margin-top: 10px; }
+
+  .add-btn {
+    padding: 10px;
+    border: 1.5px dashed var(--theme-300);
+    background: transparent;
+    border-radius: 8px;
+    color: var(--ink-soft);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 10px;
+    width: 100%;
+  }
+  .add-btn:hover { border-color: var(--theme-400); color: var(--theme-ink); background: var(--theme-50); }
+
+  .save-btn {
+    width: 100%;
+    padding: 14px;
+    margin-top: 20px;
+    border: none;
+    border-radius: 10px;
+    background: var(--theme-400);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .save-btn:hover { filter: brightness(0.95); transform: translateY(-1px); box-shadow: var(--shadow); }
+  .save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* ============ 카드 미리보기 ============ */
+  .preview-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .preview-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+  }
+
+  .card {
+    width: 1080px;
+    background: linear-gradient(135deg, var(--paper) 0%, var(--theme-50) 40%, var(--theme-100) 100%);
+    border-radius: 24px;
+    padding: 36px;
+    font-family: 'Pretendard', sans-serif;
+    color: var(--ink);
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+    transition: background 0.4s;
+  }
+
+  .card-inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 28px;
+  }
+
+  .left { display: flex; flex-direction: column; gap: 16px; }
+
+  .profile {
+    background: #fff;
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+  }
+  .profile::before {
+    content: '';
+    position: absolute;
+    inset: 8px -6px -6px 8px;
+    background: var(--theme-200);
+    border-radius: 18px;
+    z-index: -1;
+    opacity: 0.5;
+  }
+
+  .profile-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .avatar {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--theme-200), var(--theme-300));
+    border: 3px solid #fff;
+    box-shadow: 0 2px 8px rgba(43, 49, 73, 0.12);
+    position: relative;
+  }
+  .avatar .ph {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 24px;
+  }
+  .avatar canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .profile-text { flex: 1; min-width: 0; }
+  .nick {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.1;
+    word-break: break-word;
+  }
+  .nick:empty::before {
+    content: ' ';
+    display: inline-block;
+    width: 80px;
+    height: 18px;
+    background: var(--theme-100);
+    border-radius: 6px;
+    vertical-align: middle;
+  }
+  .handle {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--theme-400);
+    font-weight: 500;
+    word-break: break-all;
+  }
+  .handle:empty { display: none; }
+
+  .profile-chips {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+  .mini-chip {
+    padding: 3px 10px;
+    background: var(--theme-200);
+    color: var(--theme-ink);
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .mini-chip:empty { display: none; }
+
+  .info-box {
+    background: rgba(255, 255, 255, 0.75);
+    border-radius: 14px;
+    padding: 14px 16px;
+    backdrop-filter: blur(6px);
+  }
+  .info-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+    color: var(--theme-400);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .info-line {
+    display: flex;
+    gap: 10px;
+    padding: 5px 0;
+    font-size: 12px;
+    align-items: baseline;
+  }
+  .info-line + .info-line {
+    border-top: 1px dashed var(--line);
+  }
+  .info-line .key {
+    color: var(--ink-soft);
+    font-weight: 500;
+    min-width: 78px;
+    flex-shrink: 0;
+    font-size: 11px;
+  }
+  .info-line .val {
+    flex: 1;
+    color: var(--ink);
+    font-weight: 600;
+    word-break: break-word;
+  }
+  .info-line .val:empty::before {
+    content: '—';
+    color: var(--ink-muted);
+    font-weight: 400;
+  }
+
+  .tag-line {
+    padding: 5px 0;
+    font-size: 12px;
+  }
+  .tag-line + .tag-line {
+    border-top: 1px dashed var(--line);
+  }
+  .tag-key {
+    color: var(--ink-soft);
+    font-weight: 500;
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+  .tag-opts {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 3px;
+  }
+  .tag-opt {
+    padding: 2px 8px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .tag-opt.active {
+    background: var(--theme-200);
+    color: var(--theme-ink);
+    font-weight: 700;
+  }
+  .tag-opt.dim { color: var(--ink-muted); }
+  .tag-sep { color: var(--ink-muted); font-size: 11px; margin: 0 1px; }
+  .tag-br { flex-basis: 100%; height: 0; }
+
+  .about-box {
+    background: #fff;
+    border-radius: 14px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--line);
+  }
+  .about-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--theme-400);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .about-text {
+    font-size: 12.5px;
+    line-height: 1.75;
+    color: var(--ink);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .about-text:empty::before {
+    content: ' ';
+    display: block;
+    height: 14px;
+    background: var(--theme-100);
+    border-radius: 5px;
+    margin-bottom: 8px;
+    width: 90%;
+    opacity: 0.5;
+  }
+
+  .right { display: flex; flex-direction: column; min-width: 0; }
+  .right-head {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--theme-400);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .right-head::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--theme-200);
+  }
+
+  .char-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    align-content: start;
+  }
+
+  .char-slot {
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+  }
+  .char-pic {
+    width: 100%;
+    padding-top: 133.333%; /* 3:4 비율 (4/3 * 100%) */
+    background: var(--theme-100);
+    overflow: hidden;
+    position: relative;
+    height: 0;
+  }
+  .char-pic .ph {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--theme-300);
+    font-size: 28px;
+  }
+  .char-pic canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .char-info {
+    padding: 10px 12px;
+    text-align: center;
+    background: #fff;
+  }
+  .char-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.2;
+    word-break: break-word;
+  }
+  .char-name:empty::before {
+    content: '—';
+    color: var(--ink-muted);
+  }
+  .char-tag {
+    font-size: 11px;
+    color: var(--theme-400);
+    margin-top: 3px;
+    font-weight: 500;
+    word-break: break-word;
+  }
+
+  .empty-chars {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--ink-muted);
+    font-size: 12px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 14px;
+    border: 1.5px dashed var(--theme-200);
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--ink);
+    color: #fff;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 1000;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--danger); }
+
+  @media (max-width: 1200px) {
+    .panel { position: static; max-height: none; }
+    .card { width: 100%; max-width: 1080px; }
+  }
+  @media (max-width: 800px) {
+    .card-inner { grid-template-columns: 1fr; }
+    .char-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body data-theme="blue">
+
+<header>
+  <h1>트친소표 메이커</h1>
+  <div class="sub">Twitter Friend Intro</div>
+</header>
+
+<div class="wrap">
+  <!-- 입력 패널 -->
+  <div class="panel">
+
+    <div class="panel-section">
+      <h2>Theme</h2>
+      <div class="theme-picker">
+        <div class="theme-swatch" data-t="coral" title="Coral"></div>
+        <div class="theme-swatch active" data-t="blue" title="Blue"></div>
+        <div class="theme-swatch" data-t="sage" title="Sage"></div>
+        <div class="theme-swatch" data-t="mint" title="Mint"></div>
+        <div class="theme-swatch" data-t="emerald" title="Emerald"></div>
+        <div class="theme-swatch" data-t="yellow" title="Yellow"></div>
+        <div class="theme-swatch" data-t="gray" title="Gray"></div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <h2>Profile</h2>
+      <div class="field">
+        <label class="lbl">프로필 이미지</label>
+        <label class="img-upload-btn">
+          이미지 업로드
+          <input type="file" id="avatarInput" accept="image/*">
+        </label>
+        <div class="img-adjust" id="avatarAdjust" hidden>
+          <div class="img-adjust-title">이미지 조정</div>
+          <div class="adjust-preview round" id="avatarPreview">
+            <img class="adjust-preview-img" id="avatarPreviewImg" alt="">
+          </div>
+          <div class="slider-row">
+            <span>확대</span>
+            <input type="range" id="avatarZoom" min="100" max="300" value="100" step="1">
+            <span class="slider-val" id="avatarZoomVal">100%</span>
+          </div>
+          <div class="adjust-hint">드래그로 위치 조정</div>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label class="lbl">닉네임</label>
+          <input type="text" id="nick" maxlength="20">
+        </div>
+        <div class="field">
+          <label class="lbl">아이디</label>
+          <input type="text" id="handle" maxlength="25">
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">연령대</label>
+        <div class="toggle-grid" data-field="age" data-single="true">
+          <div class="toggle-pill" data-val="미성년자">미성년자</div>
+          <div class="toggle-pill" data-val="성인">성인</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <h2>Tendency</h2>
+      <div class="field">
+        <label class="lbl">성향</label>
+        <div class="toggle-grid" data-field="genre">
+          <div class="toggle-pill" data-val="HL">HL</div>
+          <div class="toggle-pill" data-val="BL">BL</div>
+          <div class="toggle-pill" data-val="GL">GL</div>
+          <div class="toggle-pill" data-val="ALL">ALL</div>
+          <div class="toggle-pill" data-val="Dream">Dream</div>
+          <div class="toggle-pill" data-val="NCP">NCP</div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">계정 성향</label>
+        <div class="toggle-grid" data-field="account">
+          <div class="toggle-pill" data-val="구독">구독</div>
+          <div class="toggle-pill" data-val="소비">소비</div>
+          <div class="toggle-pill" data-val="탐라 대화">탐라 대화</div>
+          <div class="toggle-pill" data-val="RT/인용">RT/인용</div>
+          <div class="toggle-pill" data-val="로그">로그</div>
+          <div class="toggle-pill" data-val="연성">연성</div>
+          <div class="toggle-pill" data-val="AI 이미지">AI 이미지</div>
+          <div class="toggle-pill" data-val="사담">사담</div>
+          <div class="toggle-pill" data-val="마음">마음</div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">최애 속성</label>
+        <div class="toggle-grid" data-field="attr">
+          <div class="toggle-pill" data-val="불">불</div>
+          <div class="toggle-pill" data-val="물">물</div>
+          <div class="toggle-pill" data-val="풀">풀</div>
+          <div class="toggle-pill" data-val="얼음">얼음</div>
+          <div class="toggle-pill" data-val="바람">바람</div>
+          <div class="toggle-pill" data-val="번개">번개</div>
+          <div class="toggle-pill" data-val="무속성">무속성</div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">이별 방식</label>
+        <div class="toggle-grid" data-field="farewell">
+          <div class="toggle-pill" data-val="블락">블락</div>
+          <div class="toggle-pill" data-val="블언블">블언블</div>
+          <div class="toggle-pill" data-val="언팔">언팔</div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl">타장르 언급</label>
+        <div class="toggle-grid" data-field="other" data-single="true">
+          <div class="toggle-pill" data-val="Yes">Yes</div>
+          <div class="toggle-pill" data-val="No">No</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <h2>About</h2>
+      <div class="field">
+        <textarea id="bio"></textarea>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <h2>Interested In</h2>
+      <div id="charList" class="char-list"></div>
+      <button class="add-btn" id="addCharBtn">+ 추가</button>
+    </div>
+
+    <button class="save-btn" id="saveBtn">Save Image</button>
+  </div>
+
+  <!-- 미리보기 -->
+  <div class="preview-area">
+    <div class="preview-label">Preview</div>
+
+    <div class="card" id="card">
+      <div class="card-inner">
+
+        <div class="left">
+          <div class="profile">
+            <div class="profile-top">
+              <div class="avatar" id="avatarOut">
+                <div class="ph">◐</div>
+              </div>
+              <div class="profile-text">
+                <div class="nick" id="nickOut"></div>
+                <div class="handle" id="handleOut"></div>
+                <div class="profile-chips">
+                  <span class="mini-chip" id="ageOut"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-title">Basic</div>
+            <div class="info-line">
+              <span class="key">이별</span>
+              <span class="val" id="farewellOut"></span>
+            </div>
+            <div class="info-line">
+              <span class="key">타장르 언급</span>
+              <span class="val" id="otherOut"></span>
+            </div>
+          </div>
+
+          <div class="info-box">
+            <div class="info-title">Tendency</div>
+            <div class="tag-line">
+              <div class="tag-key">성향</div>
+              <div class="tag-opts" id="genreOut"></div>
+            </div>
+            <div class="tag-line">
+              <div class="tag-key">계정 성향</div>
+              <div class="tag-opts" id="accountOut"></div>
+            </div>
+            <div class="tag-line">
+              <div class="tag-key">최애 속성</div>
+              <div class="tag-opts" id="attrOut"></div>
+            </div>
+          </div>
+
+          <div class="about-box">
+            <div class="about-title">About</div>
+            <div class="about-text" id="bioOut"></div>
+          </div>
+        </div>
+
+        <div class="right">
+          <div class="right-head">Interested In</div>
+          <div class="char-grid" id="charGrid">
+            <div class="empty-chars">캐릭터 / CP를 추가해주세요</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">저장 완료</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+// ============ 테마 ============
+document.querySelectorAll('.theme-swatch').forEach(sw => {
+  sw.addEventListener('click', () => {
+    document.querySelectorAll('.theme-swatch').forEach(s => s.classList.remove('active'));
+    sw.classList.add('active');
+    document.body.setAttribute('data-theme', sw.dataset.t);
+  });
+});
+
+// ============ 토글 ============
+const toggleState = {
+  genre: [], attr: [], account: [], farewell: [], age: [], other: []
+};
+const allOptions = {
+  genre: ['HL','BL','GL','ALL','Dream','NCP'],
+  attr: ['불','물','풀','얼음','바람','번개','무속성'],
+  account: ['구독','소비','탐라 대화','RT/인용','로그','연성','AI 이미지','사담','마음']
+};
+const accountBreakAfter = '로그';
+
+document.querySelectorAll('.toggle-grid').forEach(grid => {
+  const field = grid.dataset.field;
+  const single = grid.dataset.single === 'true';
+  grid.querySelectorAll('.toggle-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const val = pill.dataset.val;
+      if (single) {
+        grid.querySelectorAll('.toggle-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        toggleState[field] = [val];
+      } else {
+        pill.classList.toggle('active');
+        if (pill.classList.contains('active')) {
+          if (!toggleState[field].includes(val)) toggleState[field].push(val);
+        } else {
+          toggleState[field] = toggleState[field].filter(v => v !== val);
+        }
+      }
+      renderAll();
+    });
+  });
+});
+
+function renderTagStrip(field, containerId, breakAfter) {
+  const container = $(containerId);
+  if (!container) return;
+  const selected = toggleState[field];
+  const all = allOptions[field];
+  let html = '';
+  all.forEach((opt, i) => {
+    const isActive = selected.includes(opt);
+    html += `<span class="tag-opt ${isActive ? 'active' : 'dim'}">${opt}</span>`;
+    if (i < all.length - 1) {
+      if (breakAfter && opt === breakAfter) html += '<span class="tag-br"></span>';
+      else html += '<span class="tag-sep">/</span>';
+    }
+  });
+  container.innerHTML = html;
+}
+
+function renderProfile() {
+  $('nickOut').textContent = $('nick').value.trim();
+  let h = $('handle').value.trim();
+  if (h && !h.startsWith('@')) h = '@' + h;
+  $('handleOut').textContent = h;
+  $('ageOut').textContent = toggleState.age[0] || '';
+  $('farewellOut').textContent = toggleState.farewell.join(' / ');
+  $('otherOut').textContent = toggleState.other[0] || '';
+  $('bioOut').textContent = $('bio').value.trim();
+}
+
+function renderAll() {
+  renderTagStrip('genre', 'genreOut');
+  renderTagStrip('account', 'accountOut', accountBreakAfter);
+  renderTagStrip('attr', 'attrOut');
+  renderProfile();
+}
+
+['nick','handle','bio'].forEach(id => {
+  $(id).addEventListener('input', renderAll);
+});
+
+/* ===================================================
+   이미지 조정 시스템 (단순화)
+   - object-fit: cover 기반
+   - 사용자는 "확대" 슬라이더와 위치 드래그로 조정
+   - 저장되는 값: src, scale (1.0 ~ 3.0), posX (%), posY (%)
+   - 카드에 적용할 땐: scale = transform scale, 
+     object-position으로 위치 이동
+   =================================================== */
+
+function createImageState() {
+  return {
+    src: null,
+    scale: 1,
+    posX: 50, // %
+    posY: 50, // %
+    natW: 0,
+    natH: 0
+  };
+}
+
+// 이미지 상태를 canvas에 직접 그리기 (html2canvas가 왜곡 없이 캡처 가능)
+// imgEl은 사실 canvas 요소 (호환을 위해 이름 유지)
+function applyImageToCardElement(state, canvasEl) {
+  if (!state.src || !state.natW || !state.natH) return;
+  drawImageToCanvas(state, canvasEl);
+}
+
+// 이미지 상태를 캔버스에 cover 방식으로 그림
+function drawImageToCanvas(state, canvasEl) {
+  const parent = canvasEl.parentElement;
+  if (!parent) return;
+  const rect = parent.getBoundingClientRect();
+  const boxW = rect.width;
+  const boxH = rect.height;
+  if (boxW === 0 || boxH === 0) return;
+
+  // 고해상도 대응 (2배 렌더링)
+  const dpr = 2;
+  canvasEl.width = boxW * dpr;
+  canvasEl.height = boxH * dpr;
+  canvasEl.style.width = '100%';
+  canvasEl.style.height = '100%';
+
+  const ctx = canvasEl.getContext('2d');
+  ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+  // 이미지 로드 (캐시 활용)
+  let img = state._cachedImg;
+  if (!img || img.src !== state.src) {
+    img = new Image();
+    img.onload = () => {
+      state._cachedImg = img;
+      drawImageToCanvas(state, canvasEl);
+    };
+    img.src = state.src;
+    return;
+  }
+
+  // cover 스케일 계산 (박스를 꽉 채우는 기준 스케일)
+  const coverScale = Math.max(boxW / state.natW, boxH / state.natH);
+  // 사용자 지정 scale 곱하기
+  const finalScale = coverScale * state.scale;
+  const drawW = state.natW * finalScale;
+  const drawH = state.natH * finalScale;
+
+  // posX/posY(%)에 따라 위치 계산
+  // posX 50% = 중앙, posX 0% = 왼쪽 정렬, posX 100% = 오른쪽 정렬
+  const offsetX = (boxW - drawW) * (state.posX / 100);
+  const offsetY = (boxH - drawH) * (state.posY / 100);
+
+  ctx.drawImage(img, offsetX * dpr, offsetY * dpr, drawW * dpr, drawH * dpr);
+}
+
+// 편집 프리뷰는 img 태그 그대로 둬도 됨 (저장 대상 아님)
+// 하지만 일관성을 위해 같은 로직 사용
+function applyImageToPreview(state, imgEl) {
+  if (!state.src) return;
+  imgEl.src = state.src;
+  const pct = state.scale * 100;
+  imgEl.style.width = pct + '%';
+  imgEl.style.height = pct + '%';
+  imgEl.style.objectFit = 'cover';
+  imgEl.style.objectPosition = `${state.posX}% ${state.posY}%`;
+  imgEl.style.transform = 'none';
+  const shift = (state.scale - 1) * 100;
+  imgEl.style.left = `-${shift * state.posX / 100}%`;
+  imgEl.style.top = `-${shift * state.posY / 100}%`;
+}
+
+// 편집 프리뷰 드래그 설정
+function setupImageDrag(previewEl, state, onChange) {
+  let dragging = false;
+  let startX, startY, startPosX, startPosY;
+
+  const onDown = (e) => {
+    if (!state.src) return;
+    dragging = true;
+    const pt = e.touches ? e.touches[0] : e;
+    startX = pt.clientX;
+    startY = pt.clientY;
+    startPosX = state.posX;
+    startPosY = state.posY;
+    e.preventDefault();
+  };
+  const onMove = (e) => {
+    if (!dragging) return;
+    const pt = e.touches ? e.touches[0] : e;
+    const rect = previewEl.getBoundingClientRect();
+    const dx = (pt.clientX - startX) / rect.width * 100;
+    const dy = (pt.clientY - startY) / rect.height * 100;
+    // 드래그 방향이 직관적이려면 반대로: 오른쪽으로 드래그 = posX 감소 (이미지가 오른쪽으로 이동)
+    state.posX = Math.max(0, Math.min(100, startPosX - dx));
+    state.posY = Math.max(0, Math.min(100, startPosY - dy));
+    onChange();
+  };
+  const onUp = () => { dragging = false; };
+
+  previewEl.addEventListener('mousedown', onDown);
+  previewEl.addEventListener('touchstart', onDown, { passive: false });
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('touchmove', onMove, { passive: false });
+  window.addEventListener('mouseup', onUp);
+  window.addEventListener('touchend', onUp);
+}
+
+// ============ 프로필 이미지 ============
+const avatarState = createImageState();
+const avatarPreviewImg = $('avatarPreviewImg');
+const avatarPreview = $('avatarPreview');
+const avatarCardImg = document.createElement('canvas');
+$('avatarOut').appendChild(avatarCardImg);
+avatarCardImg.style.display = 'none';
+
+function refreshAvatar() {
+  applyImageToPreview(avatarState, avatarPreviewImg);
+  avatarCardImg.style.display = avatarState.src ? 'block' : 'none';
+  if (avatarState.src) applyImageToCardElement(avatarState, avatarCardImg);
+  // 플레이스홀더 숨김
+  const ph = $('avatarOut').querySelector('.ph');
+  if (ph) ph.style.display = avatarState.src ? 'none' : '';
+}
+
+$('avatarInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const tmpImg = new Image();
+    tmpImg.onload = () => {
+      avatarState.src = ev.target.result;
+      avatarState.natW = tmpImg.naturalWidth;
+      avatarState.natH = tmpImg.naturalHeight;
+      avatarState._cachedImg = tmpImg;
+      avatarState.scale = 1;
+      avatarState.posX = 50;
+      avatarState.posY = 50;
+      $('avatarAdjust').hidden = false;
+      $('avatarZoom').value = 100;
+      $('avatarZoomVal').textContent = '100%';
+      refreshAvatar();
+    };
+    tmpImg.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+$('avatarZoom').addEventListener('input', e => {
+  const pct = parseInt(e.target.value);
+  $('avatarZoomVal').textContent = pct + '%';
+  avatarState.scale = pct / 100;
+  refreshAvatar();
+});
+
+setupImageDrag(avatarPreview, avatarState, refreshAvatar);
+
+// ============ 캐릭터 ============
+let charId = 0;
+const characters = [];
+
+function addChar() {
+  const id = charId++;
+  const ch = {
+    id,
+    name: '',
+    tag: '',
+    imgState: createImageState()
+  };
+  characters.push(ch);
+
+  const item = document.createElement('div');
+  item.className = 'char-item';
+  item.dataset.id = id;
+  item.innerHTML = `
+    <div class="char-item-head">
+      <div class="char-thumb">
+        <span>◐</span>
+      </div>
+      <div class="char-fields">
+        <input type="text" maxlength="20" data-key="name" placeholder="이름">
+        <input type="text" maxlength="20" data-key="tag" placeholder="태그 (선택)">
+      </div>
+      <button class="char-del" title="삭제">✕</button>
+    </div>
+    <div class="char-item-body">
+      <label class="img-upload-btn">
+        이미지 업로드
+        <input type="file" accept="image/*" class="char-file">
+      </label>
+      <div class="img-adjust" hidden>
+        <div class="img-adjust-title">이미지 조정</div>
+        <div class="adjust-preview rect">
+          <img class="adjust-preview-img" alt="">
+        </div>
+        <div class="slider-row">
+          <span>확대</span>
+          <input type="range" class="char-zoom" min="100" max="300" value="100" step="1">
+          <span class="slider-val">100%</span>
+        </div>
+        <div class="adjust-hint">드래그로 위치 조정</div>
+      </div>
+    </div>
+  `;
+  $('charList').appendChild(item);
+
+  const thumb = item.querySelector('.char-thumb');
+  const fileInput = item.querySelector('.char-file');
+  const adjust = item.querySelector('.img-adjust');
+  const previewEl = item.querySelector('.adjust-preview');
+  const previewImg = item.querySelector('.adjust-preview-img');
+  const zoomSlider = item.querySelector('.char-zoom');
+  const zoomVal = item.querySelector('.slider-val');
+
+  const refresh = () => {
+    applyImageToPreview(ch.imgState, previewImg);
+    // 카드 캔버스 업데이트
+    const cardCanvas = document.querySelector(`.char-slot[data-chid="${ch.id}"] .char-pic canvas`);
+    if (cardCanvas && ch.imgState.src) {
+      cardCanvas.style.display = 'block';
+      applyImageToCardElement(ch.imgState, cardCanvas);
+    }
+    const cardPh = document.querySelector(`.char-slot[data-chid="${ch.id}"] .char-pic .ph`);
+    if (cardPh) cardPh.style.display = ch.imgState.src ? 'none' : '';
+    // 입력 패널 썸네일
+    updateCharThumb(thumb, ch);
+  };
+
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const tmpImg = new Image();
+      tmpImg.onload = () => {
+        ch.imgState.src = ev.target.result;
+        ch.imgState.natW = tmpImg.naturalWidth;
+        ch.imgState.natH = tmpImg.naturalHeight;
+        ch.imgState._cachedImg = tmpImg;
+        ch.imgState.scale = 1;
+        ch.imgState.posX = 50;
+        ch.imgState.posY = 50;
+        adjust.hidden = false;
+        zoomSlider.value = 100;
+        zoomVal.textContent = '100%';
+        renderChars();
+        requestAnimationFrame(refresh);
+      };
+      tmpImg.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  zoomSlider.addEventListener('input', e => {
+    const pct = parseInt(e.target.value);
+    zoomVal.textContent = pct + '%';
+    ch.imgState.scale = pct / 100;
+    refresh();
+  });
+
+  setupImageDrag(previewEl, ch.imgState, refresh);
+
+  item.querySelectorAll('.char-fields input[type="text"]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      ch[inp.dataset.key] = inp.value;
+      renderChars();
+      requestAnimationFrame(refresh);
+    });
+  });
+
+  item.querySelector('.char-del').addEventListener('click', () => {
+    const idx = characters.findIndex(c => c.id === id);
+    if (idx >= 0) characters.splice(idx, 1);
+    item.remove();
+    renderChars();
+  });
+
+  renderChars();
+}
+
+function updateCharThumb(thumb, ch) {
+  if (!ch.imgState.src) {
+    thumb.innerHTML = '<span>◐</span>';
+    return;
+  }
+  let img = thumb.querySelector('img');
+  if (!img) {
+    thumb.innerHTML = '';
+    img = document.createElement('img');
+    img.alt = '';
+    thumb.appendChild(img);
+  }
+  img.src = ch.imgState.src;
+  const pct = ch.imgState.scale * 100;
+  img.style.width = pct + '%';
+  img.style.height = pct + '%';
+  img.style.objectFit = 'cover';
+  img.style.objectPosition = `${ch.imgState.posX}% ${ch.imgState.posY}%`;
+  img.style.transform = 'none';
+  const shift = (ch.imgState.scale - 1) * 100;
+  img.style.left = `-${shift * ch.imgState.posX / 100}%`;
+  img.style.top = `-${shift * ch.imgState.posY / 100}%`;
+}
+
+function renderChars() {
+  const grid = $('charGrid');
+  if (characters.length === 0) {
+    grid.innerHTML = `<div class="empty-chars">캐릭터 / CP를 추가해주세요</div>`;
+    return;
+  }
+  grid.innerHTML = characters.map(ch => `
+    <div class="char-slot" data-chid="${ch.id}">
+      <div class="char-pic">
+        <div class="ph" ${ch.imgState.src ? 'style="display:none"' : ''}>◐</div>
+        <canvas ${ch.imgState.src ? '' : 'style="display:none"'}></canvas>
+      </div>
+      <div class="char-info">
+        <div class="char-name">${escapeHtml(ch.name)}</div>
+        ${ch.tag ? `<div class="char-tag">${escapeHtml(ch.tag)}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+
+  // 캔버스에 그리기
+  characters.forEach(ch => {
+    const cv = grid.querySelector(`.char-slot[data-chid="${ch.id}"] .char-pic canvas`);
+    if (cv && ch.imgState.src) applyImageToCardElement(ch.imgState, cv);
+  });
+}
+
+function escapeHtml(str) {
+  return String(str || '').replace(/[&<>"']/g, m => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[m]));
+}
+
+$('addCharBtn').addEventListener('click', addChar);
+
+// ============ 저장 ============
+$('saveBtn').addEventListener('click', async () => {
+  const btn = $('saveBtn');
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '저장 중...';
+  try {
+    const imgs = $('card').querySelectorAll('img');
+    await Promise.all(Array.from(imgs).map(img => {
+      if (!img.src || img.complete && img.naturalHeight !== 0) return Promise.resolve();
+      return new Promise(res => {
+        img.onload = res;
+        img.onerror = res;
+      });
+    }));
+
+    const card = $('card');
+    const origW = card.style.width;
+    card.style.width = '1080px';
+    await new Promise(r => setTimeout(r, 150));
+
+    // 카드 크기 변경 후 모든 canvas 다시 그리기
+    if (avatarState.src) applyImageToCardElement(avatarState, avatarCardImg);
+    characters.forEach(ch => {
+      if (!ch.imgState.src) return;
+      const cv = document.querySelector(`.char-slot[data-chid="${ch.id}"] .char-pic canvas`);
+      if (cv) applyImageToCardElement(ch.imgState, cv);
+    });
+    await new Promise(r => setTimeout(r, 100));
+
+    const canvas = await html2canvas(card, {
+      scale: 2,
+      backgroundColor: null,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      width: card.offsetWidth,
+      height: card.offsetHeight,
+      windowWidth: 1500,
+      windowHeight: document.documentElement.offsetHeight
+    });
+    card.style.width = origW;
+
+    const nick = $('nick').value.trim() || 'card';
+    const safe = nick.replace(/[^\w가-힣ㄱ-ㅎㅏ-ㅣ]/g, '_');
+    const link = document.createElement('a');
+    link.download = `트친소표_${safe}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('저장 완료');
+  } catch (err) {
+    console.error(err);
+    showToast('저장 중 오류가 발생했어요', true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+});
+
+function showToast(msg, isError) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.toggle('error', !!isError);
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+renderAll();
+</script>
+
+</body>
+</html>
