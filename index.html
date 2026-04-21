@@ -1744,31 +1744,76 @@ $('saveBtn').addEventListener('click', async () => {
     }));
 
     const card = $('card');
-    const origW = card.style.width;
-    card.style.width = '1080px';
-    await new Promise(r => setTimeout(r, 150));
 
-    // 카드 크기 변경 후 모든 canvas 다시 그리기
-    if (avatarState.src) applyImageToCardElement(avatarState, avatarCardImg);
-    characters.forEach(ch => {
-      if (!ch.imgState.src) return;
-      const cv = document.querySelector(`.char-slot[data-chid="${ch.id}"] .char-pic canvas`);
-      if (cv) applyImageToCardElement(ch.imgState, cv);
-    });
+    // ===== 모바일 대응: 데스크탑 레이아웃 강제 적용 =====
+    // 1. 카드를 화면 밖 고정 위치로 복제해서 렌더
+    const captureWrap = document.createElement('div');
+    captureWrap.style.cssText = `
+      position: fixed;
+      left: -10000px;
+      top: 0;
+      width: 1080px;
+      background: transparent;
+      z-index: -1;
+      pointer-events: none;
+    `;
+    // 카드 복제
+    const cardClone = card.cloneNode(true);
+    cardClone.style.width = '1080px';
+    cardClone.style.maxWidth = 'none';
+    cardClone.style.margin = '0';
+    // 복제본 내부의 반응형 강제 해제 (데스크탑처럼)
+    const cloneInner = cardClone.querySelector('.card-inner');
+    if (cloneInner) {
+      cloneInner.style.gridTemplateColumns = '360px 1fr';
+    }
+    const cloneCharGrid = cardClone.querySelector('.char-grid');
+    if (cloneCharGrid) {
+      cloneCharGrid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+    }
+    captureWrap.appendChild(cardClone);
+    document.body.appendChild(captureWrap);
+
+    // 복제된 canvas들에 이미지 다시 그리기
     await new Promise(r => setTimeout(r, 100));
 
-    const canvas = await html2canvas(card, {
+    // 프로필 아바타 복원
+    if (avatarState.src) {
+      const cloneAvatar = cardClone.querySelector('#avatarOut canvas');
+      if (cloneAvatar) {
+        applyImageToCardElement(avatarState, cloneAvatar);
+      }
+    }
+    // 캐릭터 캔버스 복원
+    characters.forEach(ch => {
+      if (!ch.imgState.src) return;
+      const cv = cardClone.querySelector(`.char-slot[data-chid="${ch.id}"] .char-pic canvas`);
+      if (cv) applyImageToCardElement(ch.imgState, cv);
+    });
+
+    await new Promise(r => setTimeout(r, 200));
+
+    // 복제본의 정확한 높이 측정
+    const captureH = cardClone.offsetHeight;
+
+    const canvas = await html2canvas(cardClone, {
       scale: 2,
       backgroundColor: null,
       useCORS: true,
       allowTaint: true,
       logging: false,
-      width: card.offsetWidth,
-      height: card.offsetHeight,
-      windowWidth: 1500,
-      windowHeight: document.documentElement.offsetHeight
+      width: 1080,
+      height: captureH,
+      windowWidth: 1080,
+      windowHeight: captureH,
+      scrollX: 0,
+      scrollY: 0,
+      x: 0,
+      y: 0
     });
-    card.style.width = origW;
+
+    // 복제본 제거
+    document.body.removeChild(captureWrap);
 
     const nick = $('nick').value.trim() || 'card';
     const safe = nick.replace(/[^\w가-힣ㄱ-ㅎㅏ-ㅣ]/g, '_');
