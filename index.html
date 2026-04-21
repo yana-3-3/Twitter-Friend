@@ -736,6 +736,19 @@
     border: 1.5px dashed var(--theme-200);
   }
 
+  .card-credit {
+    position: absolute;
+    top: 18px;
+    right: 24px;
+    font-family: 'Inter', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--ink-muted);
+    letter-spacing: 0.5px;
+    z-index: 2;
+    opacity: 0.7;
+  }
+
   .toast {
     position: fixed;
     bottom: 30px;
@@ -905,6 +918,7 @@
     <div class="preview-label">Preview</div>
 
     <div class="card" id="card">
+      <div class="card-credit">@yana_3_3　　</div>
       <div class="card-inner">
 
         <div class="left">
@@ -1039,6 +1053,7 @@ function renderProfile() {
   let h = $('handle').value.trim();
   if (h && !h.startsWith('@')) h = '@' + h;
   $('handleOut').textContent = h;
+  $('creditOut').textContent = h;
   $('ageOut').textContent = toggleState.age[0] || '';
   $('farewellOut').textContent = toggleState.farewell.join(' / ');
   $('otherOut').textContent = toggleState.other[0] || '';
