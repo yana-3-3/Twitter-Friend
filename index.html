@@ -223,6 +223,55 @@
     pointer-events: none;
   }
 
+  .layout-picker {
+    display: flex;
+    gap: 10px;
+  }
+  .layout-option {
+    flex: 1;
+    padding: 10px;
+    background: var(--paper-soft);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    user-select: none;
+  }
+  .layout-option:hover { border-color: var(--theme-300); }
+  .layout-option.active {
+    background: var(--theme-100);
+    border-color: var(--theme-400);
+  }
+  .layout-preview {
+    width: 48px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+  }
+  .layout-preview.cols-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .layout-preview div {
+    aspect-ratio: 3/4;
+    background: var(--theme-300);
+    border-radius: 2px;
+  }
+  .layout-option.active .layout-preview div {
+    background: var(--theme-400);
+  }
+  .layout-option span {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-soft);
+  }
+  .layout-option.active span {
+    color: var(--theme-ink);
+  }
+
   /* 이미지 조정 섹션 (프로필 및 캐릭터 공통) */
   .img-upload-row {
     display: flex;
@@ -709,6 +758,22 @@
     gap: 12px;
     align-content: start;
   }
+  .card[data-layout="2"] {
+    width: 820px;
+    max-width: 820px;
+  }
+  .card[data-layout="2"] .char-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  /* 모바일에서는 2열 레이아웃도 화면에 맞게 축소 */
+  @media (max-width: 1200px) {
+    .card[data-layout="2"] {
+      width: 100%;
+      max-width: 820px;
+    }
+  }
 
   .char-slot {
     background: #fff;
@@ -845,6 +910,26 @@
           <input type="color" id="customColor" value="#a8c5ec">
           <span class="custom-icon">✎</span>
         </label>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <h2>Layout</h2>
+      <div class="layout-picker">
+        <div class="layout-option active" data-cols="3" title="3열 (작게)">
+          <div class="layout-preview">
+            <div></div><div></div><div></div>
+            <div></div><div></div><div></div>
+          </div>
+          <span>3열</span>
+        </div>
+        <div class="layout-option" data-cols="2" title="2열 (크게)">
+          <div class="layout-preview cols-2">
+            <div></div><div></div>
+            <div></div><div></div>
+          </div>
+          <span>2열</span>
+        </div>
       </div>
     </div>
 
@@ -1521,6 +1606,24 @@ function escapeHtml(str) {
 
 $('addCharBtn').addEventListener('click', addChar);
 
+// ============ 레이아웃 선택 ============
+document.querySelectorAll('.layout-option').forEach(opt => {
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.layout-option').forEach(o => o.classList.remove('active'));
+    opt.classList.add('active');
+    const cols = opt.dataset.cols;
+    $('card').setAttribute('data-layout', cols);
+    // 레이아웃 변경 시 이미지 캔버스 다시 그리기 (박스 크기가 바뀌므로)
+    requestAnimationFrame(() => {
+      characters.forEach(ch => {
+        if (!ch.imgState.src) return;
+        const cv = document.querySelector(`.char-slot[data-chid="${ch.id}"] .char-pic canvas`);
+        if (cv) applyImageToCardElement(ch.imgState, cv);
+      });
+    });
+  });
+});
+
 // ============ localStorage 저장/복원 ============
 const STORAGE_KEY = 'twitCardData_v1';
 let saveTimer = null;
@@ -1538,6 +1641,7 @@ function saveToStorage() {
         theme: document.body.getAttribute('data-theme'),
         customColor: $('customColor') ? $('customColor').value : null,
         customVars: getCustomThemeVars(),
+        layout: $('card').getAttribute('data-layout') || '3',
         avatarState: {
           src: avatarState.src,
           scale: avatarState.scale,
@@ -1607,10 +1711,18 @@ function loadFromStorage() {
     }
 
     // 테마 복원
+    // 테마 복원
     if (data.theme) {
       document.body.setAttribute('data-theme', data.theme);
       document.querySelectorAll('.theme-swatch').forEach(s => {
         s.classList.toggle('active', s.dataset.t === data.theme);
+      });
+    }
+    // 레이아웃 복원
+    if (data.layout) {
+      $('card').setAttribute('data-layout', data.layout);
+      document.querySelectorAll('.layout-option').forEach(o => {
+        o.classList.toggle('active', o.dataset.cols === data.layout);
       });
     }
     // 커스텀 테마 변수 복원
@@ -1752,14 +1864,16 @@ $('saveBtn').addEventListener('click', async () => {
       position: fixed;
       left: -10000px;
       top: 0;
-      width: 1080px;
+      width: ${card.getAttribute('data-layout') === '2' ? 820 : 1080}px;
       background: transparent;
       z-index: -1;
       pointer-events: none;
     `;
     // 카드 복제
     const cardClone = card.cloneNode(true);
-    cardClone.style.width = '1080px';
+    const layout = card.getAttribute('data-layout') || '3';
+    const captureWidth = layout === '2' ? 820 : 1080;
+    cardClone.style.width = captureWidth + 'px';
     cardClone.style.maxWidth = 'none';
     cardClone.style.margin = '0';
     // 복제본 내부의 반응형 강제 해제 (데스크탑처럼)
@@ -1769,7 +1883,8 @@ $('saveBtn').addEventListener('click', async () => {
     }
     const cloneCharGrid = cardClone.querySelector('.char-grid');
     if (cloneCharGrid) {
-      cloneCharGrid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+      cloneCharGrid.style.gridTemplateColumns = `repeat(${layout}, 1fr)`;
+      cloneCharGrid.style.gap = '12px';
     }
     captureWrap.appendChild(cardClone);
     document.body.appendChild(captureWrap);
@@ -1802,9 +1917,9 @@ $('saveBtn').addEventListener('click', async () => {
       useCORS: true,
       allowTaint: true,
       logging: false,
-      width: 1080,
+      width: captureWidth,
       height: captureH,
-      windowWidth: 1080,
+      windowWidth: captureWidth,
       windowHeight: captureH,
       scrollX: 0,
       scrollY: 0,
