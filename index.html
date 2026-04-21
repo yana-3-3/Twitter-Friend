@@ -424,6 +424,22 @@
   .save-btn:hover { filter: brightness(0.95); transform: translateY(-1px); box-shadow: var(--shadow); }
   .save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
+  .reset-btn {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ink-muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .reset-btn:hover { border-color: var(--danger); color: var(--danger); }
+
   /* ============ 카드 미리보기 ============ */
   .preview-area {
     display: flex;
@@ -942,6 +958,7 @@
     </div>
 
     <button class="save-btn" id="saveBtn">Save Image</button>
+    <button class="reset-btn" id="resetBtn">모두 지우기</button>
   </div>
 
   <!-- 미리보기 -->
@@ -1131,7 +1148,6 @@ function renderProfile() {
   let h = $('handle').value.trim();
   if (h && !h.startsWith('@')) h = '@' + h;
   $('handleOut').textContent = h;
-  $('creditOut').textContent = h;
   $('ageOut').textContent = toggleState.age[0] || '';
   $('farewellOut').textContent = toggleState.farewell.join(' / ');
   $('otherOut').textContent = toggleState.other[0] || '';
@@ -1505,6 +1521,212 @@ function escapeHtml(str) {
 
 $('addCharBtn').addEventListener('click', addChar);
 
+// ============ localStorage 저장/복원 ============
+const STORAGE_KEY = 'twitCardData_v1';
+let saveTimer = null;
+
+function saveToStorage() {
+  // 디바운스: 연속 입력 시 마지막 것만 저장
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try {
+      const data = {
+        nick: $('nick').value,
+        handle: $('handle').value,
+        bio: $('bio').value,
+        toggleState: toggleState,
+        theme: document.body.getAttribute('data-theme'),
+        customColor: $('customColor') ? $('customColor').value : null,
+        customVars: getCustomThemeVars(),
+        avatarState: {
+          src: avatarState.src,
+          scale: avatarState.scale,
+          posX: avatarState.posX,
+          posY: avatarState.posY,
+          natW: avatarState.natW,
+          natH: avatarState.natH
+        },
+        characters: characters.map(ch => ({
+          name: ch.name,
+          tag: ch.tag,
+          imgState: {
+            src: ch.imgState.src,
+            scale: ch.imgState.scale,
+            posX: ch.imgState.posX,
+            posY: ch.imgState.posY,
+            natW: ch.imgState.natW,
+            natH: ch.imgState.natH
+          }
+        }))
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+      // 용량 초과 등의 오류는 조용히 무시
+      console.warn('저장 실패:', e);
+    }
+  }, 400);
+}
+
+function getCustomThemeVars() {
+  const vars = {};
+  ['--theme-50','--theme-100','--theme-200','--theme-300','--theme-400','--theme-ink'].forEach(v => {
+    const val = document.body.style.getPropertyValue(v);
+    if (val) vars[v] = val;
+  });
+  return Object.keys(vars).length ? vars : null;
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+
+    // 텍스트 입력값 복원
+    if (data.nick) $('nick').value = data.nick;
+    if (data.handle) $('handle').value = data.handle;
+    if (data.bio) $('bio').value = data.bio;
+
+    // 토글 상태 복원
+    if (data.toggleState) {
+      Object.keys(data.toggleState).forEach(field => {
+        toggleState[field] = data.toggleState[field] || [];
+      });
+      // 토글 pill UI 복원
+      document.querySelectorAll('.toggle-grid').forEach(grid => {
+        const field = grid.dataset.field;
+        const selected = toggleState[field] || [];
+        grid.querySelectorAll('.toggle-pill').forEach(pill => {
+          if (selected.includes(pill.dataset.val)) {
+            pill.classList.add('active');
+          } else {
+            pill.classList.remove('active');
+          }
+        });
+      });
+    }
+
+    // 테마 복원
+    if (data.theme) {
+      document.body.setAttribute('data-theme', data.theme);
+      document.querySelectorAll('.theme-swatch').forEach(s => {
+        s.classList.toggle('active', s.dataset.t === data.theme);
+      });
+    }
+    // 커스텀 테마 변수 복원
+    if (data.customVars) {
+      Object.keys(data.customVars).forEach(v => {
+        document.body.style.setProperty(v, data.customVars[v]);
+      });
+      document.querySelectorAll('.theme-swatch').forEach(s => s.classList.remove('active'));
+      const customSw = document.querySelector('.theme-swatch.custom');
+      if (customSw) customSw.classList.add('active');
+      if (data.customColor && $('customColor')) {
+        $('customColor').value = data.customColor;
+      }
+    }
+
+    // 프로필 이미지 복원
+    if (data.avatarState && data.avatarState.src) {
+      Object.assign(avatarState, data.avatarState);
+      const tmpImg = new Image();
+      tmpImg.onload = () => {
+        avatarState._cachedImg = tmpImg;
+        $('avatarAdjust').hidden = false;
+        $('avatarZoom').value = Math.round(avatarState.scale * 100);
+        $('avatarZoomVal').textContent = Math.round(avatarState.scale * 100) + '%';
+        refreshAvatar();
+      };
+      tmpImg.src = avatarState.src;
+    }
+
+    // 캐릭터 복원
+    if (data.characters && Array.isArray(data.characters)) {
+      data.characters.forEach(chData => {
+        addChar(); // 새 캐릭터 추가
+        const ch = characters[characters.length - 1];
+        ch.name = chData.name || '';
+        ch.tag = chData.tag || '';
+        Object.assign(ch.imgState, chData.imgState || {});
+
+        // 입력 필드에도 값 반영
+        const item = document.querySelector(`.char-item[data-id="${ch.id}"]`);
+        if (item) {
+          const nameInput = item.querySelector('[data-key="name"]');
+          const tagInput = item.querySelector('[data-key="tag"]');
+          if (nameInput) nameInput.value = ch.name;
+          if (tagInput) tagInput.value = ch.tag;
+
+          // 이미지 있으면 복원
+          if (ch.imgState.src) {
+            const tmpImg = new Image();
+            tmpImg.onload = () => {
+              ch.imgState._cachedImg = tmpImg;
+              const adjust = item.querySelector('.img-adjust');
+              const zoomSlider = item.querySelector('.char-zoom');
+              const zoomVal = item.querySelector('.slider-val');
+              if (adjust) adjust.hidden = false;
+              if (zoomSlider) zoomSlider.value = Math.round(ch.imgState.scale * 100);
+              if (zoomVal) zoomVal.textContent = Math.round(ch.imgState.scale * 100) + '%';
+              renderChars();
+              requestAnimationFrame(() => {
+                const cardCanvas = document.querySelector(`.char-slot[data-chid="${ch.id}"] .char-pic canvas`);
+                if (cardCanvas) applyImageToCardElement(ch.imgState, cardCanvas);
+                updateCharThumb(item.querySelector('.char-thumb'), ch);
+              });
+            };
+            tmpImg.src = ch.imgState.src;
+          }
+        }
+      });
+    }
+
+    renderAll();
+  } catch (e) {
+    console.warn('불러오기 실패:', e);
+  }
+}
+
+// 모든 입력/변경에 저장 연결
+['nick','handle','bio'].forEach(id => {
+  $(id).addEventListener('input', saveToStorage);
+});
+// 토글, 테마, 이미지 변경 시에도 저장
+const origRenderAll = renderAll;
+// renderAll 호출될 때마다 저장 (토글 변경 감지)
+document.addEventListener('click', e => {
+  if (e.target.closest('.toggle-pill') || e.target.closest('.theme-swatch')) {
+    setTimeout(saveToStorage, 50);
+  }
+});
+// 컬러피커 변경 시
+if ($('customColor')) {
+  $('customColor').addEventListener('input', () => setTimeout(saveToStorage, 50));
+}
+// 슬라이더/이미지 변경 시
+document.addEventListener('input', e => {
+  if (e.target.type === 'range' || e.target.type === 'file') {
+    setTimeout(saveToStorage, 100);
+  }
+});
+// 드래그 종료 시 저장
+document.addEventListener('mouseup', () => setTimeout(saveToStorage, 100));
+document.addEventListener('touchend', () => setTimeout(saveToStorage, 100));
+
+// 초기화 버튼
+const resetBtn = document.getElementById('resetBtn');
+if (resetBtn) {
+  resetBtn.addEventListener('click', () => {
+    if (confirm('저장된 모든 내용을 지우고 새로 시작할까요?')) {
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    }
+  });
+}
+
+// 초기화 (불러오기 먼저, 그 다음 렌더)
+loadFromStorage();
+
 // ============ 저장 ============
 $('saveBtn').addEventListener('click', async () => {
   const btn = $('saveBtn');
@@ -1571,8 +1793,6 @@ function showToast(msg, isError) {
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2200);
 }
-
-renderAll();
 </script>
 
 </body>
